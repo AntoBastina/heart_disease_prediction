@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Heart Disease Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .prediction-table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .prediction-table th, .prediction-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .prediction-table th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .prediction-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .prediction-table tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h2>Heart Disease Prediction (Multiple Models)</h2>
+
+    <form method="post" action="/predict">
+        <!-- Form fields for input data -->
+        <label for="age">Age:</label>
+        <input type="text" id="age" name="age" required>
+
+        <label for="sex">Sex (1 for Male, 0 for Female):</label>
+        <input type="text" id="sex" name="sex" required>
+
+        <label for="chest_pain_type">Chest Pain Type (0-3):</label>
+        <input type="text" id="chest_pain_type" name="chest_pain_type" required>
+
+        <label for="resting_bp_s">Resting Blood Pressure (in mmHg):</label>
+        <input type="text" id="resting_bp_s" name="resting_bp_s" required>
+
+        <label for="cholesterol">Cholesterol (in mg/dl):</label>
+        <input type="text" id="cholesterol" name="cholesterol" required>
+
+        <label for="fasting_blood_sugar">Fasting Blood Sugar (1 if > 120 mg/dl, else 0):</label>
+        <input type="text" id="fasting_blood_sugar" name="fasting_blood_sugar" required>
+
+        <label for="resting_ecg">Resting Electrocardiographic Results (0-2):</label>
+        <input type="text" id="resting_ecg" name="resting_ecg" required>
+
+        <label for="max_heart_rate">Max Heart Rate Achieved:</label>
+        <input type="text" id="max_heart_rate" name="max_heart_rate" required>
+
+        <label for="exercise_angina">Exercise Induced Angina (1 = Yes, 0 = No):</label>
+        <input type="text" id="exercise_angina" name="exercise_angina" required>
+
+        <label for="oldpeak">Oldpeak:</label>
+        <input type="text" id="oldpeak" name="oldpeak" required>
+
+        <label for="st_slope">ST Slope (0-2):</label>
+        <input type="text" id="st_slope" name="st_slope" required>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if predictions %}
+        <h3>Model Predictions:</h3>
+        <table class="prediction-table">
+            <tr>
+                <th>Model</th>
+                <th>Prediction</th>
+                <th>At Risk Probability</th>
+                <th>No Risk Probability</th>
+            </tr>
+            {% for model, result in predictions.items() %}
+            <tr>
+                <td>{{ model }}</td>
+                <td>{{ result['label'] }}</td>
+                <td>{{ '%.2f' % result['prob_at_risk'] }}</td>
+                <td>{{ '%.2f' % result['prob_no_risk'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+    {% if logs %}
+        <h3>Steps Performed:</h3>
+        <ul>
+            {% for log in logs %}
+                <li>{{ log }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if chart_data %}
+        <h3>Prediction Probabilities</h3>
+        <canvas id="modelChart" width="400" height="200"></canvas>
+        <script>
+            const ctx = document.getElementById('modelChart').getContext('2d');
+
+            // Passing chart data to the JS from Flask
+            const chartLabels = {{ chart_data.keys() | list | tojson }};  // To convert to a proper JS array
+            const chartValues = {{ chart_data.values() | list | tojson }};  // Same for values
+
+            const modelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Probability of At Risk (0-1)',
+                        data: chartValues,
+                        backgroundColor: [
+                            '#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 0.1
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    {% endif %}
+
+</body>
+</html>
