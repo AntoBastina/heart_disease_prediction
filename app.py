@@ -2,16 +2,20 @@ from flask import Flask, render_template, request
 import numpy as np
 import pandas as pd
 import pickle
+import os
 
 app = Flask(__name__)
 
-# Dictionary mapping model names to their respective pickle file paths
+# Get the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Dictionary mapping model names to their respective pickle file paths (relative)
 model_files = {
-    "Logistic Regression": "C:/Users/HP/Documents/sem6/miniproject-ds/Logistic_Regression.pkl",
-    "Decision Tree": "C:/Users/HP/Documents/sem6/miniproject-ds/Decision_Tree.pkl",
-    "Random Forest": "C:/Users/HP/Documents/sem6/miniproject-ds/Random_Forest.pkl",
-    "SVM": "C:/Users/HP/Documents/sem6/miniproject-ds/SVM.pkl",
-    "KNN": "C:/Users/HP/Documents/sem6/miniproject-ds/KNN.pkl"
+    "Logistic Regression": os.path.join(current_dir, "Logistic_Regression.pkl"),
+    "Decision Tree": os.path.join(current_dir, "Decision_Tree.pkl"),
+    "Random Forest": os.path.join(current_dir, "Random_Forest.pkl"),
+    "SVM": os.path.join(current_dir, "SVM.pkl"),
+    "KNN": os.path.join(current_dir, "KNN.pkl")
 }
 
 # Load models
@@ -37,11 +41,10 @@ def predict():
         logs.append("Invalid input! Please enter numbers.")
         return render_template('index.html', logs=logs)
 
-    if (input_data[0]==0 or  input_data[3]==0 or input_data[4]==0   ):  # Adjust the slice based on critical features
+    if (input_data[0] == 0 or input_data[3] == 0 or input_data[4] == 0):
         logs.append("Some inputs like age, cholesterol, or blood pressure cannot be zero.")
         return render_template('index.html', logs=logs)
 
-    # Proceed with prediction if validation passes
     feature_names = ['age', 'sex', 'chest_pain_type', 'resting_bp_s', 'cholesterol',
                      'fasting_blood_sugar', 'resting_ecg', 'max_heart_rate',
                      'exercise_angina', 'oldpeak', 'st_slope']
@@ -67,7 +70,6 @@ def predict():
                            predictions=predictions,
                            logs=logs,
                            chart_data=chart_data)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
